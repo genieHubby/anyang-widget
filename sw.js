@@ -1,49 +1,46 @@
-// Anyang Sports PWA Service Worker (Cache First Strategy)
-const CACHE_NAME = 'anyang-sports-v2';
-const STATIC_ASSETS = [
+const CACHE_NAME = 'anyang-sports-widget-v1';
+const urlsToCache = [
   '/',
   '/index.html',
   '/style.css',
-  '/app.js',
+  '/script.js',
   '/manifest.json'
 ];
 
-// Install Event: Cache Static Assets
+// 1. 서비스 워커 설치 및 정적 자산 캐싱
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      console.log('[ServiceWorker] Caching static assets');
-      return cache.addAll(STATIC_ASSETS);
-    })
+    caches.open(CACHE_NAME)
+      .then((cache) => {
+        console.log('Opened cache');
+        return cache.addAll(urlsToCache);
+      })
   );
-  self.skipWaiting();
 });
 
-// Activate Event: Cleanup Old Caches
-self.addEventListener('activate', (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) => {
-      return Promise.all(
-        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
-      );
-    })
-  );
-  self.clients.claim();
-});
-
-// Fetch Event: Network First with Cache Fallback
+// 2. 네트워크 요청 가로채기 (캐시된 데이터 우선 반환)
 self.addEventListener('fetch', (event) => {
   event.respondWith(
-    fetch(event.request)
-      .then((networkResponse) => {
-        if (networkResponse && networkResponse.status === 200) {
-          const responseClone = networkResponse.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseClone);
-          });
-        }
-        return networkResponse;
+    caches.match(event.request)
+      .then((response) => {
+        // 캐시에 있으면 캐시 반환, 없으면 네트워크 요청
+        return response || fetch(event.request);
       })
-      .catch(() => caches.match(event.request))
+  );
+});
+
+// 3. 오래된 캐시 정리 (버전 업그레이드 시)
+self.addEventListener('activate', (event) => {
+  const cacheWhitelist = [CACHE_NAME];
+  event.waitUntil(
+    caches.keys().then((cacheNames) => {
+      return Promise.all(
+        cacheNames.map((cacheName) => {
+          if (cacheWhitelist.indexOf(cacheName) === -1) {
+            return caches.delete(cacheName);
+          }
+        })
+      );
+    })
   );
 });
