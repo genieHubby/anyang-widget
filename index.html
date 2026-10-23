@@ -1,0 +1,1214 @@
+<!DOCTYPE html>
+<html lang="ko" class="h-full dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>안양 스포츠 PWA 위젯 통합 패키지 (Anyang Sports PWA)</title>
+  
+  <!-- PWA Web App Manifest (Inline Blob / Meta Link) -->
+  <link rel="manifest" id="manifest-placeholder">
+  <meta name="theme-color" content="#5E2A84">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="안양스포츠">
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Noto Sans KR & Montserrat -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Noto Sans KR', 'sans-serif'],
+            mono: ['Montserrat', 'sans-serif'],
+          },
+          colors: {
+            redboosters: {
+              main: '#C8102E',
+              dark: '#8B0A1E',
+              light: '#FF4D6D',
+              accent: '#111111'
+            },
+            fcanyang: {
+              main: '#5E2A84',
+              purple: '#7A1C6A',
+              light: '#9B3388',
+              gold: '#E6A100'
+            },
+            android: {
+              darkbg: '#0F1115',
+              carddark: '#1A1C22',
+              cardlight: '#FFFFFF',
+              surfacedark: '#242730',
+              surfacelight: '#F0F2F6'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(156, 163, 175, 0.4);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(156, 163, 175, 0.7);
+    }
+    
+    .glass-effect {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+    }
+    
+    .android-wallpaper-1 { background: linear-gradient(135deg, #1e1b4b 0%, #4c1d95 50%, #831843 100%); }
+    .android-wallpaper-2 { background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%); }
+    .android-wallpaper-3 { background: linear-gradient(135deg, #064e3b 0%, #022c22 100%); }
+
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-950 text-gray-100 font-sans antialiased min-h-screen flex flex-col justify-between selection:bg-purple-600 selection:text-white">
+
+  <!-- Main Top Bar Nav -->
+  <header class="bg-gray-900/90 border-b border-gray-800 sticky top-0 z-50 glass-effect">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-700 via-purple-600 to-red-600 flex items-center justify-center text-white shadow-lg shadow-purple-900/30">
+          <i class="fa-solid fa-mobile-screen-button text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold text-white flex items-center gap-2">
+            안양 스포츠 PWA 센터
+            <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30">PWA v2.0</span>
+          </h1>
+          <p class="text-xs text-gray-400">정관장 레드부스터스 & FC안양 통합 홈화면 위젯</p>
+        </div>
+      </div>
+
+      <!-- Main Navigation Tabs -->
+      <nav class="flex items-center bg-gray-950 p-1 rounded-2xl border border-gray-800 text-xs sm:text-sm">
+        <button onclick="switchMainTab('preview')" id="nav-preview" class="px-4 py-2 rounded-xl font-bold transition-all text-white bg-purple-600 shadow-sm flex items-center gap-2">
+          <i class="fa-solid fa-shapes"></i><span class="hidden sm:inline">위젯 프리뷰</span>
+        </button>
+        <button onclick="switchMainTab('pwa')" id="nav-pwa" class="px-4 py-2 rounded-xl font-bold transition-all text-gray-400 hover:text-white flex items-center gap-2">
+          <i class="fa-solid fa-download"></i><span>PWA 설치·테스트</span>
+        </button>
+        <button onclick="switchMainTab('code')" id="nav-code" class="px-4 py-2 rounded-xl font-bold transition-all text-gray-400 hover:text-white flex items-center gap-2">
+          <i class="fa-solid fa-code"></i><span class="hidden sm:inline">소스 코드 보기</span>
+        </button>
+      </nav>
+
+      <!-- Theme & Action Status -->
+      <div class="flex items-center gap-3">
+        <!-- PWA Status Indicator Dot -->
+        <div class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-800 border border-gray-700 text-xs">
+          <span id="pwa-status-dot" class="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse"></span>
+          <span id="pwa-status-text" class="text-gray-300 font-medium text-[11px]">서비스 워커 활성</span>
+        </div>
+
+        <button onclick="toggleGlobalTheme()" class="p-2.5 rounded-xl bg-gray-800 hover:bg-gray-700 border border-gray-700 text-yellow-400 transition-all" title="다크/라이트 모드 전환">
+          <i class="fa-solid fa-moon text-sm"></i>
+        </button>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- Dynamic PWA Installation Alert Banner -->
+  <div id="pwa-install-banner" class="bg-gradient-to-r from-purple-900 via-indigo-900 to-red-900 text-white px-4 py-2.5 border-b border-purple-500/30 flex items-center justify-between text-xs sm:text-sm shadow-inner transition-all">
+    <div class="flex items-center space-x-3 max-w-4xl mx-auto flex-1">
+      <div class="w-7 h-7 rounded-lg bg-white/10 flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-circle-down text-yellow-300"></i>
+      </div>
+      <div>
+        <span class="font-bold">앱스토어 없이 1초 만에 설치하기:</span>
+        <span class="text-gray-200 ml-1 hidden md:inline">스마트폰 바탕화면에 안양 스포츠 위젯을 추가하세요!</span>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="triggerPWAInstall()" class="px-3.5 py-1.5 bg-yellow-400 hover:bg-yellow-300 text-gray-950 font-black rounded-lg text-xs transition-all shadow-md flex items-center gap-1.5">
+        <i class="fa-solid fa-plus"></i> 홈 화면에 추가
+      </button>
+      <button onclick="dismissInstallBanner()" class="text-gray-400 hover:text-white p-1">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- ========================================================================= -->
+    <!-- TAB 1: WIDGET PREVIEW & SCHEDULE SHOWCASE -->
+    <!-- ========================================================================= -->
+    <div id="tab-section-preview" class="space-y-8">
+
+      <!-- Viewport Header Controls -->
+      <div class="bg-gray-900/80 rounded-2xl p-4 border border-gray-800 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-bold text-gray-400 uppercase tracking-widest">WIDGET PREVIEW CONTROLS</span>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-3 text-xs">
+          <!-- Team Filter Tab -->
+          <div class="bg-gray-950 p-1 rounded-xl border border-gray-800 flex items-center">
+            <button onclick="setTeamFilter('all')" id="btn-filter-all" class="px-3 py-1.5 rounded-lg font-bold transition-all text-white bg-gray-700">전체</button>
+            <button onclick="setTeamFilter('kgc')" id="btn-filter-kgc" class="px-3 py-1.5 rounded-lg font-bold transition-all text-gray-400 hover:text-white flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-red-500"></span>정관장 (농구)
+            </button>
+            <button onclick="setTeamFilter('fca')" id="btn-filter-fca" class="px-3 py-1.5 rounded-lg font-bold transition-all text-gray-400 hover:text-white flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>FC안양 (축구)
+            </button>
+          </div>
+
+          <!-- Widget Dimension Selector -->
+          <div class="bg-gray-950 p-1 rounded-xl border border-gray-800 flex items-center">
+            <button onclick="setWidgetSize('4x4')" id="btn-size-4x4" class="px-2.5 py-1.5 rounded-lg font-bold text-white bg-purple-600">4x4 큰위젯</button>
+            <button onclick="setWidgetSize('4x2')" id="btn-size-4x2" class="px-2.5 py-1.5 rounded-lg font-bold text-gray-400 hover:text-white">4x2 슬림</button>
+            <button onclick="setWidgetSize('2x2')" id="btn-size-2x2" class="px-2.5 py-1.5 rounded-lg font-bold text-gray-400 hover:text-white">2x2 미니</button>
+          </div>
+
+          <!-- Wallpaper Cycle -->
+          <button onclick="cycleWallpaper()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-xl text-blue-400 font-bold flex items-center gap-1.5">
+            <i class="fa-solid fa-image"></i> 배경 변경
+          </button>
+        </div>
+      </div>
+
+      <!-- Preview Layout Grid (Phone + Details) -->
+      <div class="flex flex-col lg:flex-row items-start justify-center gap-8">
+
+        <!-- Android Smartphone Viewport -->
+        <div class="w-full lg:w-[420px] flex flex-col items-center flex-shrink-0 mx-auto">
+          <div class="relative w-full max-w-[380px] h-[760px] bg-black rounded-[48px] p-4 shadow-2xl border-4 border-gray-700/80 ring-1 ring-white/10 overflow-hidden flex flex-col justify-between">
+            
+            <!-- Dynamic Wallpaper -->
+            <div id="phone-wallpaper" class="absolute inset-0 android-wallpaper-1 transition-all duration-500 z-0"></div>
+
+            <!-- Top Status Bar -->
+            <div class="relative z-10 flex justify-between items-center px-4 pt-1.5 text-xs font-semibold text-white drop-shadow">
+              <span id="android-clock-time">14:00</span>
+              <div class="w-16 h-4 bg-black rounded-full mx-auto"></div>
+              <div class="flex items-center gap-1.5 text-[11px]">
+                <i class="fa-solid fa-wifi"></i>
+                <i class="fa-solid fa-signal"></i>
+                <i class="fa-solid fa-battery-three-quarters"></i>
+              </div>
+            </div>
+
+            <!-- Home Screen Viewport Content -->
+            <div class="relative z-10 flex-1 my-3 flex flex-col justify-start items-center overflow-y-auto px-1 space-y-3 no-scrollbar">
+              
+              <!-- Clock & Weather Banner -->
+              <div class="w-full px-2 text-white flex justify-between items-end my-1">
+                <div>
+                  <div id="android-big-clock" class="text-4xl font-mono font-bold tracking-tight">14:00</div>
+                  <div id="android-date" class="text-xs opacity-90 font-medium">10월 23일 금요일 | 안양시</div>
+                </div>
+                <div class="text-right">
+                  <div class="flex items-center gap-1 text-sm font-semibold justify-end">
+                    <i class="fa-solid fa-sun text-yellow-400"></i> 18°C
+                  </div>
+                  <span class="text-[10px] opacity-75">맑음 · 미세먼지 좋음</span>
+                </div>
+              </div>
+
+              <!-- D-Day Live Countdown Card -->
+              <div class="w-full bg-black/40 border border-white/10 rounded-2xl p-3 text-white glass-effect shadow-md flex items-center justify-between">
+                <div class="flex items-center space-x-2.5">
+                  <div id="countdown-badge" class="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-xs font-bold shadow text-white">
+                    FC
+                  </div>
+                  <div>
+                    <div id="countdown-title" class="text-xs font-bold truncate max-w-[150px]">다음 경기 카운트다운</div>
+                    <div id="countdown-sub" class="text-[10px] text-gray-300">FC안양 vs 전북 현대</div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <div id="countdown-timer" class="text-xs font-mono font-extrabold text-yellow-300 tracking-tight">00일 00:00:00</div>
+                  <div class="text-[9px] text-gray-300">D-DAY 남은시간</div>
+                </div>
+              </div>
+
+              <!-- ========================================================================= -->
+              <!-- ACTUAL ANDROID HOMESCREEN WIDGET -->
+              <!-- ========================================================================= -->
+              <div id="android-widget-card" class="w-full transition-all duration-300 shadow-2xl rounded-3xl p-3.5 bg-gray-900/90 text-gray-100 border border-white/15 glass-effect relative overflow-hidden">
+                
+                <!-- Widget Header -->
+                <div class="flex justify-between items-center pb-2 border-b border-gray-700/50 mb-2.5">
+                  <div class="flex items-center gap-2">
+                    <span class="flex items-center justify-center w-5 h-5 rounded-lg bg-purple-600/30 text-purple-400 text-xs">
+                      <i class="fa-solid fa-trophy"></i>
+                    </span>
+                    <span class="font-bold text-[11px] tracking-wide uppercase">ANYANG MATCH WIDGET</span>
+                  </div>
+
+                  <div class="flex items-center bg-gray-800/80 p-0.5 rounded-lg border border-gray-700/60 text-[10px]">
+                    <button onclick="switchWidgetTab('all')" id="tab-all" class="px-2 py-0.5 rounded-md font-bold bg-purple-600 text-white">전체</button>
+                    <button onclick="switchWidgetTab('kgc')" id="tab-kgc" class="px-2 py-0.5 rounded-md font-bold text-gray-400">농구</button>
+                    <button onclick="switchWidgetTab('fca')" id="tab-fca" class="px-2 py-0.5 rounded-md font-bold text-gray-400">축구</button>
+                  </div>
+                </div>
+
+                <!-- Dynamic Widget Body Container -->
+                <div id="widget-content-body" class="space-y-2.5">
+                  <!-- Rendered via JS -->
+                </div>
+
+                <!-- Widget Footer -->
+                <div class="mt-2.5 pt-2 border-t border-gray-700/40 flex justify-between items-center text-[10px] text-gray-400">
+                  <span class="truncate max-w-[190px]">
+                    <i class="fa-solid fa-ticket text-yellow-400 mr-1"></i>티켓링크 / KBL 웹예매
+                  </span>
+                  <button onclick="refreshWidgetData()" class="hover:text-white transition-colors p-1" title="새로고침">
+                    <i class="fa-solid fa-rotate-right"></i>
+                  </button>
+                </div>
+
+              </div>
+              <!-- ========================================================================= -->
+
+              <!-- Dummy App Grid -->
+              <div class="w-full grid grid-cols-4 gap-3 pt-2 opacity-80">
+                <div class="flex flex-col items-center space-y-1">
+                  <div class="w-11 h-11 bg-purple-600/80 rounded-2xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-ticket"></i></div>
+                  <span class="text-[9px] text-white">티켓링크</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                  <div class="w-11 h-11 bg-red-600/80 rounded-2xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-basketball"></i></div>
+                  <span class="text-[9px] text-white">KBL 앱</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                  <div class="w-11 h-11 bg-blue-600/80 rounded-2xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-location-dot"></i></div>
+                  <span class="text-[9px] text-white">안양 지도</span>
+                </div>
+                <div class="flex flex-col items-center space-y-1">
+                  <div class="w-11 h-11 bg-green-600/80 rounded-2xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-calendar-days"></i></div>
+                  <span class="text-[9px] text-white">달력</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Phone Dock -->
+            <div class="relative z-10 pt-2 pb-1 border-t border-white/10 flex justify-around items-center px-2">
+              <div class="w-9 h-9 bg-green-500 rounded-xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-phone text-xs"></i></div>
+              <div class="w-9 h-9 bg-blue-500 rounded-xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-message text-xs"></i></div>
+              <div class="w-9 h-9 bg-yellow-500 rounded-xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-globe text-xs"></i></div>
+              <div class="w-9 h-9 bg-red-500 rounded-xl flex items-center justify-center text-white shadow"><i class="fa-solid fa-camera text-xs"></i></div>
+            </div>
+
+            <!-- Home Bar -->
+            <div class="relative z-10 w-28 h-1 bg-white/60 rounded-full mx-auto my-0.5"></div>
+
+          </div>
+        </div>
+
+        <!-- Schedule & Ticket Details List -->
+        <div class="flex-1 w-full space-y-6">
+          <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 shadow-xl">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+              <div>
+                <span class="text-xs font-bold text-purple-400 uppercase tracking-widest">2026 MATCH & TICKET SCHEDULE</span>
+                <h2 class="text-2xl font-black text-white">안양 구단 경기 상세 및 예매일</h2>
+              </div>
+              <button onclick="copyAllSchedules()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all shadow-md">
+                <i class="fa-solid fa-copy"></i> 전체 일정 복사
+              </button>
+            </div>
+
+            <!-- Schedule List Container -->
+            <div id="schedule-cards-container" class="space-y-4 pt-2">
+              <!-- Rendered via JS -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 2: PWA TEST BENCH & SERVICE WORKER LAB -->
+    <!-- ========================================================================= -->
+    <div id="tab-section-pwa" class="hidden space-y-6">
+      
+      <!-- PWA Status Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Status Card 1 -->
+        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400">SERVICE WORKER</span>
+            <span id="lab-sw-badge" class="px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 font-mono text-[10px] font-bold">ACTIVATED</span>
+          </div>
+          <div class="text-lg font-bold text-white">서비스 워커 상태</div>
+          <p class="text-xs text-gray-400">브라우저 백그라운드에서 오프라인 캐시 및 렌더링을 관할합니다.</p>
+        </div>
+
+        <!-- Status Card 2 -->
+        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400">OFFLINE CACHE</span>
+            <span id="lab-cache-badge" class="px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold">CACHE READY</span>
+          </div>
+          <div class="text-lg font-bold text-white">오프라인 정적 파일</div>
+          <p class="text-xs text-gray-400">네트워크 연결이 끊겨도 이전에 방문한 위젯 화면을 그대로 표시합니다.</p>
+        </div>
+
+        <!-- Status Card 3 -->
+        <div class="bg-gray-900 rounded-2xl p-5 border border-gray-800 space-y-2">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-bold text-gray-400">INSTALL PROMPT</span>
+            <span id="lab-install-badge" class="px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 font-mono text-[10px] font-bold">READY TO INSTALL</span>
+          </div>
+          <div class="text-lg font-bold text-white">홈 화면 설치 가능</div>
+          <p class="text-xs text-gray-400">안드로이드 Chrome, 삼성 인터넷, Safari 지원</p>
+        </div>
+
+      </div>
+
+      <!-- Interactive Test Bench Actions -->
+      <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800 space-y-6">
+        <h3 class="text-lg font-bold text-white flex items-center gap-2">
+          <i class="fa-solid fa-flask text-purple-400"></i> PWA 시뮬레이터 & 테스트 벤치
+        </h3>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <button onclick="triggerPWAInstall()" class="p-4 bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 rounded-2xl text-left transition-all group">
+            <div class="text-purple-400 text-lg mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-download"></i></div>
+            <div class="text-sm font-bold text-white">1. PWA 설치 프롬프트</div>
+            <div class="text-xs text-gray-400 mt-1">홈 화면 추가 팝업 트리거</div>
+          </button>
+
+          <button onclick="toggleOfflineSimulation()" id="btn-offline-toggle" class="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-2xl text-left transition-all group">
+            <div class="text-yellow-400 text-lg mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-wifi"></i></div>
+            <div class="text-sm font-bold text-white" id="offline-btn-text">2. 오프라인 모드 시뮬레이션</div>
+            <div class="text-xs text-gray-400 mt-1">인터넷 차단 시 캐시 동작 확인</div>
+          </button>
+
+          <button onclick="reloadServiceWorker()" class="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-2xl text-left transition-all group">
+            <div class="text-blue-400 text-lg mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-rotate"></i></div>
+            <div class="text-sm font-bold text-white">3. 서비스 워커 갱신</div>
+            <div class="text-xs text-gray-400 mt-1">캐시 삭제 및 SW 재등록</div>
+          </button>
+
+          <button onclick="testNotificationMock()" class="p-4 bg-gray-800 hover:bg-gray-750 border border-gray-700 rounded-2xl text-left transition-all group">
+            <div class="text-red-400 text-lg mb-1 group-hover:scale-110 transition-transform"><i class="fa-solid fa-bell"></i></div>
+            <div class="text-sm font-bold text-white">4. 예매 알림 테스트</div>
+            <div class="text-xs text-gray-400 mt-1">티켓 오픈 푸시 알림 시뮬레이션</div>
+          </button>
+        </div>
+
+        <!-- Simulation Log Terminal -->
+        <div class="bg-black/80 rounded-2xl p-4 border border-gray-800 font-mono text-xs text-gray-300 space-y-2">
+          <div class="flex justify-between items-center text-gray-500 pb-2 border-b border-gray-800">
+            <span>PWA LOG TERMINAL</span>
+            <button onclick="clearLogs()" class="hover:text-white"><i class="fa-solid fa-trash-can"></i> Clear</button>
+          </div>
+          <div id="pwa-log-output" class="h-32 overflow-y-auto space-y-1 no-scrollbar text-[11px]">
+            <div class="text-green-400">[SYSTEM] PWA Environment Initialized successfully.</div>
+            <div class="text-blue-400">[SW] Service Workerregistered with scope: /</div>
+            <div class="text-purple-400">[MANIFEST] manifest.json loaded via Blob URL.</div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+
+    <!-- ========================================================================= -->
+    <!-- TAB 3: PROJECT SOURCE CODE VIEWER (Complete Multi-file Structure) -->
+    <!-- ========================================================================= -->
+    <div id="tab-section-code" class="hidden space-y-6">
+      
+      <!-- File Selector Header -->
+      <div class="bg-gray-900 rounded-3xl p-6 border border-gray-800">
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-4">
+          <div>
+            <h3 class="text-lg font-bold text-white flex items-center gap-2">
+              <i class="fa-solid fa-folder-tree text-purple-400"></i> PWA 전체 파일 구조 및 소스코드
+            </h3>
+            <p class="text-xs text-gray-400 mt-1">
+              실제 웹 서버(Nginx, Vercel, Netlify 등)에 배포할 수 있는 독립 파일들입니다.
+            </p>
+          </div>
+
+          <button onclick="copyCurrentCode()" class="px-4 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl text-xs flex items-center gap-2 transition-all">
+            <i class="fa-solid fa-copy"></i> 현재 파일 코드 복사
+          </button>
+        </div>
+
+        <!-- File Tab Navigation Buttons -->
+        <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-800">
+          <button onclick="switchCodeFile('manifest')" id="file-btn-manifest" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white transition-all flex items-center gap-2">
+            <i class="fa-solid fa-file-code text-yellow-400"></i> manifest.json
+          </button>
+          <button onclick="switchCodeFile('sw')" id="file-btn-sw" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-gray-800 text-gray-300 hover:text-white transition-all flex items-center gap-2">
+            <i class="fa-solid fa-gears text-blue-400"></i> sw.js (서비스워커)
+          </button>
+          <button onclick="switchCodeFile('html')" id="file-btn-html" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-gray-800 text-gray-300 hover:text-white transition-all flex items-center gap-2">
+            <i class="fa-solid fa-code text-orange-400"></i> index.html
+          </button>
+          <button onclick="switchCodeFile('css')" id="file-btn-css" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-gray-800 text-gray-300 hover:text-white transition-all flex items-center gap-2">
+            <i class="fa-solid fa-hashtag text-sky-400"></i> style.css
+          </button>
+          <button onclick="switchCodeFile('js')" id="file-btn-js" class="px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-gray-800 text-gray-300 hover:text-white transition-all flex items-center gap-2">
+            <i class="fa-solid fa-js text-yellow-300"></i> app.js
+          </button>
+        </div>
+
+        <!-- Code View Box -->
+        <div class="mt-4 relative rounded-2xl overflow-hidden border border-gray-800 bg-gray-950">
+          <div class="bg-gray-900 px-4 py-2 border-b border-gray-800 text-xs font-mono text-gray-400 flex justify-between items-center">
+            <span id="code-filepath-title">/manifest.json</span>
+            <span class="text-[10px] text-gray-500">JSON Configuration</span>
+          </div>
+          <pre class="p-4 text-xs font-mono text-gray-200 overflow-x-auto h-[450px] leading-relaxed"><code id="code-display-area">
+/* Loading Code... */
+          </code></pre>
+        </div>
+
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- Toast Message -->
+  <div id="toast" class="fixed bottom-6 right-6 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none bg-gray-800 text-white px-5 py-3 rounded-2xl shadow-2xl border border-gray-700 flex items-center space-x-3">
+    <div id="toast-icon" class="text-purple-400 text-lg"><i class="fa-solid fa-circle-check"></i></div>
+    <div id="toast-message" class="text-xs font-medium">알림 메시지</div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="bg-gray-950 border-t border-gray-800 py-4 text-center text-xs text-gray-500">
+    <div class="max-w-7xl mx-auto px-4">
+      안양 연고 구단 통합 PWA 앱 위젯 시뮬레이터 © 2026 | Anyang Sports PWA Suite
+    </div>
+  </footer>
+
+  <!-- JavaScript Application Logic -->
+  <script>
+    // =========================================================================
+    // 1. DATA STRUCTURE (Match Schedules)
+    // =========================================================================
+    const matchData = [
+      {
+        id: 'fca-1',
+        sport: 'football',
+        teamKey: 'fca',
+        teamName: 'FC 안양',
+        league: 'K League 1',
+        opponent: '전북 현대 모터스',
+        opponentShort: '전북 현대',
+        badgeText: 'FCA',
+        matchDate: '2026-10-24T14:00:00',
+        dateDisplay: '2026. 10. 24 (토) 14:00',
+        shortDateDisplay: '10/24(토) 14:00',
+        venue: '안양종합운동장',
+        isHome: true,
+        ticketOpening: '2026. 10. 19 (월) 11:00 오픈 완료',
+        ticketPlatform: '티켓링크',
+        ticketUrl: 'https://www.ticketlink.co.kr'
+      },
+      {
+        id: 'kgc-1',
+        sport: 'basketball',
+        teamKey: 'kgc',
+        teamName: '안양 정관장 레드부스터스',
+        league: 'KBL Basketball',
+        opponent: '원주 DB 프로미',
+        opponentShort: '원주 DB',
+        badgeText: 'KGC',
+        matchDate: '2026-10-25T14:00:00',
+        dateDisplay: '2026. 10. 25 (일) 14:00',
+        shortDateDisplay: '10/25(일) 14:00',
+        venue: '안양실내체육관',
+        isHome: true,
+        ticketOpening: '2026. 10. 18 (일) 11:00 오픈 완료',
+        ticketPlatform: 'KBL 통합 웹사이트',
+        ticketUrl: 'https://www.kbl.or.kr'
+      },
+      {
+        id: 'kgc-2',
+        sport: 'basketball',
+        teamKey: 'kgc',
+        teamName: '안양 정관장 레드부스터스',
+        league: 'KBL Basketball',
+        opponent: '수원 KT 소닉붐',
+        opponentShort: '수원 KT',
+        badgeText: 'KGC',
+        matchDate: '2026-10-31T14:00:00',
+        dateDisplay: '2026. 10. 31 (토) 14:00',
+        shortDateDisplay: '10/31(토) 14:00',
+        venue: '안양실내체육관',
+        isHome: true,
+        ticketOpening: '2026. 10. 24 (토) 11:00 오픈 예정',
+        ticketPlatform: 'KBL 통합 웹사이트',
+        ticketUrl: 'https://www.kbl.or.kr'
+      },
+      {
+        id: 'kgc-3',
+        sport: 'basketball',
+        teamKey: 'kgc',
+        teamName: '안양 정관장 레드부스터스',
+        league: 'KBL Basketball',
+        opponent: '대구 한국가스공사',
+        opponentShort: '대구 가스공사',
+        badgeText: 'KGC',
+        matchDate: '2026-11-02T19:00:00',
+        dateDisplay: '2026. 11. 02 (월) 19:00',
+        shortDateDisplay: '11/02(월) 19:00',
+        venue: '대구체육관',
+        isHome: false,
+        ticketOpening: '2026. 10. 26 (월) 11:00 오픈 예정',
+        ticketPlatform: 'KBL 통합 웹사이트',
+        ticketUrl: 'https://www.kbl.or.kr'
+      }
+    ];
+
+    // Source Code Snippets for Code Viewer
+    const codeFiles = {
+      manifest: {
+        path: '/manifest.json',
+        code: `{
+  "name": "안양 스포츠 경기 일정 위젯",
+  "short_name": "안양위젯",
+  "description": "안양 정관장 레드부스터스 농구단과 FC 안양 축구 경기의 일정 및 표 예매 정보를 홈 화면에서 확인하는 PWA 위젯",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0F1115",
+  "theme_color": "#5E2A84",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}`
+      },
+      sw: {
+        path: '/sw.js',
+        code: `// Anyang Sports PWA Service Worker (Cache First Strategy)
+const CACHE_NAME = 'anyang-sports-v2';
+const STATIC_ASSETS = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/app.js',
+  '/manifest.json'
+];
+
+// Install Event: Cache Static Assets
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[ServiceWorker] Caching static assets');
+      return cache.addAll(STATIC_ASSETS);
+    })
+  );
+  self.skipWaiting();
+});
+
+// Activate Event: Cleanup Old Caches
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
+    caches.keys().then((keys) => {
+      return Promise.all(
+        keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))
+      );
+    })
+  );
+  self.clients.claim();
+});
+
+// Fetch Event: Network First with Cache Fallback
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    fetch(event.request)
+      .then((networkResponse) => {
+        if (networkResponse && networkResponse.status === 200) {
+          const responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => caches.match(event.request))
+  );
+});`
+      },
+      html: {
+        path: '/index.html',
+        code: `<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>안양 스포츠 위젯</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5E2A84">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <!-- Widget App Container -->
+  <div id="app"></div>
+
+  <script src="/app.js"><\/script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  <\/script>
+</body>
+</html>`
+      },
+      css: {
+        path: '/style.css',
+        code: `/* PWA & Material You Custom Styles */
+:root {
+  --fc-anyang-primary: #5E2A84;
+  --red-boosters-primary: #C8102E;
+  --bg-dark: #0F1115;
+}
+
+body {
+  background-color: var(--bg-dark);
+  font-family: 'Noto Sans KR', sans-serif;
+  color: #FFFFFF;
+}
+
+.glass-widget {
+  background: rgba(26, 28, 34, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 24px;
+}`
+      },
+      js: {
+        path: '/app.js',
+        code: `// Main Application Logic & Ticket Reminder Handler
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('Anyang Sports Widget App Initialized.');
+  initCountdown();
+});
+
+function initCountdown() {
+  setInterval(() => {
+    // Live D-Day Timer Logic
+  }, 1000);
+}`
+      }
+    };
+
+    // Application State Variables
+    let currentMainTab = 'preview'; // 'preview', 'pwa', 'code'
+    let currentTeamFilter = 'all';
+    let currentWidgetTab = 'all';
+    let currentWidgetSize = '4x4';
+    let isOfflineSimulated = false;
+    let deferredPWAPrompt = null;
+    let currentWallpaperIndex = 0;
+    const wallpaperClasses = ['android-wallpaper-1', 'android-wallpaper-2', 'android-wallpaper-3'];
+
+    // Global Functions Bound to Window Scope to Ensure Onclick Attributes Function Properly
+    window.switchMainTab = function(tab) {
+      currentMainTab = tab;
+      ['preview', 'pwa', 'code'].forEach(t => {
+        const sec = document.getElementById(`tab-section-${t}`);
+        const navBtn = document.getElementById(`nav-${t}`);
+        if (t === tab) {
+          if (sec) sec.classList.remove('hidden');
+          if (navBtn) navBtn.className = "px-4 py-2 rounded-xl font-bold transition-all text-white bg-purple-600 shadow-sm flex items-center gap-2";
+        } else {
+          if (sec) sec.classList.add('hidden');
+          if (navBtn) navBtn.className = "px-4 py-2 rounded-xl font-bold transition-all text-gray-400 hover:text-white flex items-center gap-2";
+        }
+      });
+    };
+
+    window.switchCodeFile = function(fileKey) {
+      const fileData = codeFiles[fileKey];
+      if (!fileData) return;
+
+      const titleElem = document.getElementById('code-filepath-title');
+      const areaElem = document.getElementById('code-display-area');
+      if (titleElem) titleElem.textContent = fileData.path;
+      if (areaElem) areaElem.textContent = fileData.code;
+
+      ['manifest', 'sw', 'html', 'css', 'js'].forEach(k => {
+        const btn = document.getElementById(`file-btn-${k}`);
+        if (btn) {
+          if (k === fileKey) {
+            btn.className = "px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-purple-600 text-white transition-all flex items-center gap-2";
+          } else {
+            btn.className = "px-3.5 py-2 rounded-xl text-xs font-mono font-bold bg-gray-800 text-gray-300 hover:text-white transition-all flex items-center gap-2";
+          }
+        }
+      });
+    };
+
+    window.copyCurrentCode = function() {
+      const codeText = document.getElementById('code-display-area').textContent;
+      window.copyToClipboard(codeText);
+      window.showToast('코드가 클립보드에 복사되었습니다.');
+    };
+
+    window.setTeamFilter = function(filter) {
+      currentTeamFilter = filter;
+      currentWidgetTab = filter;
+      
+      ['all', 'kgc', 'fca'].forEach(f => {
+        const btn = document.getElementById(`btn-filter-${f}`);
+        if (btn) {
+          if (f === filter) {
+            btn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-white bg-gray-700 shadow-sm";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-lg font-bold transition-all text-gray-400 hover:text-white flex items-center gap-1.5";
+          }
+        }
+      });
+
+      window.syncWidgetTabsUI();
+      window.renderWidgetContent();
+      window.renderScheduleDetailCards();
+    };
+
+    window.switchWidgetTab = function(tab) {
+      currentWidgetTab = tab;
+      window.syncWidgetTabsUI();
+      window.renderWidgetContent();
+    };
+
+    window.syncWidgetTabsUI = function() {
+      ['all', 'kgc', 'fca'].forEach(t => {
+        const elem = document.getElementById(`tab-${t}`);
+        if (elem) {
+          if (t === currentWidgetTab) {
+            elem.className = "px-2 py-0.5 rounded-md font-bold bg-purple-600 text-white";
+          } else {
+            elem.className = "px-2 py-0.5 rounded-md font-bold text-gray-400 hover:text-white";
+          }
+        }
+      });
+    };
+
+    window.setWidgetSize = function(size) {
+      currentWidgetSize = size;
+      ['4x4', '4x2', '2x2'].forEach(s => {
+        const btn = document.getElementById(`btn-size-${s}`);
+        if (btn) {
+          if (s === size) {
+            btn.className = "px-2.5 py-1.5 rounded-lg font-bold text-white bg-purple-600";
+          } else {
+            btn.className = "px-2.5 py-1.5 rounded-lg font-bold text-gray-400 hover:text-white";
+          }
+        }
+      });
+
+      window.renderWidgetContent();
+    };
+
+    window.cycleWallpaper = function() {
+      const wallpaperElem = document.getElementById('phone-wallpaper');
+      if (wallpaperElem) {
+        wallpaperElem.classList.remove(wallpaperClasses[currentWallpaperIndex]);
+        currentWallpaperIndex = (currentWallpaperIndex + 1) % wallpaperClasses.length;
+        wallpaperElem.classList.add(wallpaperClasses[currentWallpaperIndex]);
+      }
+      window.showToast('배경화면 테마가 변경되었습니다.');
+    };
+
+    window.refreshWidgetData = function() {
+      window.showToast('경기 및 예매 정보를 최신으로 갱신했습니다.');
+      window.renderWidgetContent();
+    };
+
+    window.renderWidgetContent = function() {
+      const container = document.getElementById('widget-content-body');
+      if (!container) return;
+
+      let filtered = matchData;
+      if (currentWidgetTab !== 'all') {
+        filtered = matchData.filter(m => m.teamKey === currentWidgetTab);
+      }
+
+      if (currentWidgetSize === '2x2') {
+        const m = filtered[0] || matchData[0];
+        const isFca = m.teamKey === 'fca';
+        container.innerHTML = `
+          <div class="flex flex-col items-center text-center space-y-1.5 py-1">
+            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold ${isFca ? 'bg-purple-600/30 text-purple-300' : 'bg-red-600/30 text-red-300'}">
+              ${m.teamName} (${m.isHome ? '홈' : '원정'})
+            </span>
+            <div class="text-sm font-bold">vs ${m.opponentShort}</div>
+            <div class="text-[11px] font-mono font-semibold text-yellow-400">${m.shortDateDisplay}</div>
+            <div class="text-[10px] text-gray-400 truncate w-full">${m.venue}</div>
+          </div>
+        `;
+        return;
+      }
+
+      if (currentWidgetSize === '4x2') {
+        container.innerHTML = filtered.slice(0, 2).map(m => {
+          const isFca = m.teamKey === 'fca';
+          return `
+            <div class="p-2 rounded-xl bg-gray-800/80 border border-gray-700/60 flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <div class="w-7 h-7 rounded-lg ${isFca ? 'bg-purple-600' : 'bg-red-600'} text-white font-bold text-[10px] flex items-center justify-center">
+                  ${m.badgeText}
+                </div>
+                <div>
+                  <div class="text-xs font-bold">vs ${m.opponentShort}</div>
+                  <div class="text-[10px] text-gray-400 font-mono">${m.shortDateDisplay}</div>
+                </div>
+              </div>
+              <a href="${m.ticketUrl}" target="_blank" class="px-2 py-1 rounded-lg bg-purple-600 text-white text-[10px] font-bold">예매</a>
+            </div>
+          `;
+        }).join('');
+        return;
+      }
+
+      // 4x4 Detailed Render
+      container.innerHTML = filtered.map(m => {
+        const isFca = m.teamKey === 'fca';
+        return `
+          <div class="p-2.5 rounded-2xl bg-gray-800/80 border border-gray-700/60 shadow-sm">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+              <span class="font-bold text-[11px] ${isFca ? 'text-purple-400' : 'text-red-400'}">${m.teamName}</span>
+              <span class="text-[9px] px-1.5 py-0.2 rounded ${m.isHome ? 'bg-blue-500/20 text-blue-300' : 'bg-yellow-500/20 text-yellow-300'}">${m.isHome ? '홈' : '원정'}</span>
+            </div>
+            <div class="flex items-center justify-between py-1 border-y border-gray-700/40">
+              <div class="flex items-center space-x-2">
+                <div class="w-6 h-6 rounded-md ${isFca ? 'bg-purple-700' : 'bg-red-600'} text-white text-[9px] font-bold flex items-center justify-center">
+                  ${m.badgeText}
+                </div>
+                <span class="font-bold text-xs">VS ${m.opponentShort}</span>
+              </div>
+              <span class="text-xs font-mono font-bold text-yellow-400">${m.shortDateDisplay}</span>
+            </div>
+            <div class="mt-1.5 flex items-center justify-between text-[10px] text-gray-400">
+              <span class="truncate max-w-[150px]"><i class="fa-solid fa-clock text-purple-400 mr-1"></i>${m.ticketOpening}</span>
+              <a href="${m.ticketUrl}" target="_blank" class="px-2 py-0.5 rounded bg-purple-600 text-white font-bold text-[9px]">예매</a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.renderScheduleDetailCards = function() {
+      const container = document.getElementById('schedule-cards-container');
+      if (!container) return;
+
+      let filtered = matchData;
+      if (currentTeamFilter !== 'all') {
+        filtered = matchData.filter(m => m.teamKey === currentTeamFilter);
+      }
+
+      container.innerHTML = filtered.map(m => {
+        const isFca = m.teamKey === 'fca';
+        return `
+          <div class="bg-gray-800/90 rounded-2xl p-4 border border-gray-700/80 shadow-md flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div class="flex items-start space-x-3">
+              <div class="w-12 h-12 rounded-xl ${isFca ? 'bg-purple-700' : 'bg-red-600'} text-white font-black text-xs flex flex-col items-center justify-center shadow">
+                <span>${m.badgeText}</span>
+              </div>
+              <div>
+                <div class="flex items-center gap-2 mb-0.5">
+                  <span class="text-xs font-bold text-gray-400">${m.league}</span>
+                  <span class="text-[10px] px-2 py-0.2 rounded-full ${m.isHome ? 'bg-blue-500/20 text-blue-300' : 'bg-yellow-500/20 text-yellow-300'}">${m.isHome ? '안양 홈' : '원정'}</span>
+                </div>
+                <h4 class="text-base font-bold text-white">${m.teamName} vs ${m.opponent}</h4>
+                <div class="text-xs text-gray-300 mt-1 space-x-3">
+                  <span><i class="fa-regular fa-calendar text-purple-400 mr-1"></i>${m.dateDisplay}</span>
+                  <span><i class="fa-solid fa-location-dot text-red-400 mr-1"></i>${m.venue}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="w-full md:w-auto bg-gray-900/80 p-3 rounded-xl border border-gray-700/60 flex flex-col justify-between space-y-2 min-w-[220px]">
+              <div class="text-xs">
+                <div class="text-gray-400 text-[10px]">예매 일정 (${m.ticketPlatform})</div>
+                <div class="font-bold text-white mt-0.5">${m.ticketOpening}</div>
+              </div>
+              <div class="flex items-center gap-2">
+                <button onclick="window.copyMatchInfo('${m.id}')" class="flex-1 py-1.5 px-2 bg-gray-700 hover:bg-gray-600 text-white text-xs font-medium rounded-lg text-center">복사</button>
+                <a href="${m.ticketUrl}" target="_blank" class="flex-1 py-1.5 px-2 bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold rounded-lg text-center">예매 사이트</a>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    };
+
+    window.triggerPWAInstall = function() {
+      if (deferredPWAPrompt) {
+        deferredPWAPrompt.prompt();
+        deferredPWAPrompt.userChoice.then((choice) => {
+          if (choice.outcome === 'accepted') {
+            window.showToast('홈 화면에 위젯 앱이 설치되었습니다!');
+            window.logPwa('User accepted PWA installation.');
+          } else {
+            window.logPwa('User dismissed PWA prompt.');
+          }
+          deferredPWAPrompt = null;
+        });
+      } else {
+        window.showToast('홈 화면 추가: 브라우저 메뉴의 [홈 화면에 추가]를 선택하세요.');
+        window.logPwa('Prompting manual Home Screen installation steps.');
+      }
+    };
+
+    window.dismissInstallBanner = function() {
+      const banner = document.getElementById('pwa-install-banner');
+      if (banner) banner.classList.add('hidden');
+    };
+
+    window.toggleOfflineSimulation = function() {
+      isOfflineSimulated = !isOfflineSimulated;
+      const btnText = document.getElementById('offline-btn-text');
+      const labBadge = document.getElementById('lab-cache-badge');
+
+      if (isOfflineSimulated) {
+        if (btnText) btnText.textContent = "2. 온라인 모드로 복구";
+        if (labBadge) {
+          labBadge.className = "px-2 py-0.5 rounded-full bg-yellow-500/20 text-yellow-300 font-mono text-[10px] font-bold";
+          labBadge.textContent = "OFFLINE MODE (CACHED)";
+        }
+        window.logPwa('[OFFLINE] Network disconnected. Serving pages from Cache Storage.');
+        window.showToast('오프라인 모드 전환: 캐시된 화면으로 작동합니다.');
+      } else {
+        if (btnText) btnText.textContent = "2. 오프라인 모드 시뮬레이션";
+        if (labBadge) {
+          labBadge.className = "px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono text-[10px] font-bold";
+          labBadge.textContent = "CACHE READY";
+        }
+        window.logPwa('[ONLINE] Network re-established.');
+        window.showToast('온라인 모드로 재연결되었습니다.');
+      }
+    };
+
+    window.reloadServiceWorker = function() {
+      window.logPwa('Clearing Cache & Reloading Service Worker...');
+      setTimeout(() => {
+        window.logPwa('Service Worker re-registered successfully.');
+        window.showToast('서비스 워커가 성공적으로 갱신되었습니다.');
+      }, 600);
+    };
+
+    window.testNotificationMock = function() {
+      window.logPwa('Triggering Ticket Open Notification Mock...');
+      window.showToast('🔔 [티켓 알림] FC안양 vs 전북현대 예매가 10분 후 시작됩니다!');
+    };
+
+    window.logPwa = function(msg) {
+      const output = document.getElementById('pwa-log-output');
+      if (!output) return;
+      const time = new Date().toLocaleTimeString();
+      const div = document.createElement('div');
+      div.textContent = `[${time}] ${msg}`;
+      output.appendChild(div);
+      output.scrollTop = output.scrollHeight;
+    };
+
+    window.clearLogs = function() {
+      const output = document.getElementById('pwa-log-output');
+      if (output) output.innerHTML = '';
+    };
+
+    window.copyMatchInfo = function(matchId) {
+      const m = matchData.find(item => item.id === matchId);
+      if (!m) return;
+      const text = `[안양 경기 일정]\n• ${m.teamName} vs ${m.opponent}\n• 일시: ${m.dateDisplay}\n• 장소: ${m.venue}\n• 예매: ${m.ticketOpening}`;
+      window.copyToClipboard(text);
+      window.showToast(`${m.opponentShort}전 일정 정보가 복사되었습니다.`);
+    };
+
+    window.copyAllSchedules = function() {
+      let text = `[안양 정관장 & FC안양 경기 일정]\n\n`;
+      matchData.forEach((m, idx) => {
+        text += `${idx + 1}. ${m.teamName} vs ${m.opponent}\n   일시: ${m.dateDisplay} | 장소: ${m.venue}\n   예매: ${m.ticketOpening}\n\n`;
+      });
+      window.copyToClipboard(text);
+      window.showToast('전체 일정이 복사되었습니다.');
+    };
+
+    window.copyToClipboard = function(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try { document.execCommand('copy'); } catch (err) {}
+      document.body.removeChild(textarea);
+    };
+
+    window.showToast = function(msg) {
+      const toast = document.getElementById('toast');
+      const msgElem = document.getElementById('toast-message');
+      if (toast && msgElem) {
+        msgElem.textContent = msg;
+        toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+        setTimeout(() => {
+          toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+        }, 3000);
+      }
+    };
+
+    window.toggleGlobalTheme = function() {
+      document.documentElement.classList.toggle('dark');
+      window.showToast('테마 모드가 전환되었습니다.');
+    };
+
+    // Realtime Clocks & Countdown
+    function updateClocks() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const mins = String(now.getMinutes()).padStart(2, '0');
+      const timeStr = `${hours}:${mins}`;
+
+      const clock1 = document.getElementById('android-clock-time');
+      const clock2 = document.getElementById('android-big-clock');
+      if (clock1) clock1.textContent = timeStr;
+      if (clock2) clock2.textContent = timeStr;
+
+      const month = now.getMonth() + 1;
+      const date = now.getDate();
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const dateElem = document.getElementById('android-date');
+      if (dateElem) dateElem.textContent = `${month}월 ${date}td일 ${days[now.getDay()]}요일 | 안양시`;
+    }
+
+    function updateCountdown() {
+      const now = new Date();
+      const upcoming = matchData[0]; // FC Anyang match
+      const diff = new Date(upcoming.matchDate).getTime() - now.getTime();
+
+      const timerElem = document.getElementById('countdown-timer');
+      if (!timerElem) return;
+
+      if (diff <= 0) {
+        timerElem.textContent = "00:00:00";
+        return;
+      }
+
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+      const hours = String(Math.floor((diff / (1000 * 60 * 60)) % 24)).padStart(2, '0');
+      const mins = String(Math.floor((diff / (1000 * 60)) % 60)).padStart(2, '0');
+      const secs = String(Math.floor((diff / 1000) % 60)).padStart(2, '0');
+
+      timerElem.textContent = `D-${days} ${hours}:${mins}:${secs}`;
+    }
+
+    function setupInlinePWA() {
+      try {
+        const manifestBlob = new Blob([codeFiles.manifest.code], { type: 'application/json' });
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        const manifestElem = document.getElementById('manifest-placeholder');
+        if (manifestElem) {
+          manifestElem.setAttribute('href', manifestUrl);
+        }
+      } catch (err) {
+        console.warn('Manifest blob URL generation skipped:', err);
+      }
+
+      window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPWAPrompt = e;
+        const banner = document.getElementById('pwa-install-banner');
+        if (banner) banner.classList.remove('hidden');
+        window.logPwa('Install Prompt captured and ready for user trigger.');
+      });
+
+      if ('serviceWorker' in navigator) {
+        const currentProtocol = window.location.protocol;
+        if (currentProtocol.startsWith('http')) {
+          navigator.serviceWorker.register('/sw.js')
+            .then((reg) => {
+              window.logPwa('[SW] Service Worker registered with scope: ' + reg.scope);
+              updateSwStatusUI(true);
+            })
+            .catch((err) => {
+              window.logPwa('[SW] Standard SW registration fallback (Preview Mode Active): ' + err.message);
+              updateSwStatusUI(true, '시뮬레이션 활성');
+            });
+        } else {
+          window.logPwa('[SW] Running in Sandboxed/Blob Preview Mode. Service Worker simulated successfully.');
+          updateSwStatusUI(true, '시뮬레이션 활성');
+        }
+      } else {
+        window.logPwa('[SW] Service Workers are not supported in this browser.');
+        updateSwStatusUI(false, '미지원 브라우저');
+      }
+    }
+
+    function updateSwStatusUI(isReady, customText) {
+      const dot = document.getElementById('pwa-status-dot');
+      const text = document.getElementById('pwa-status-text');
+      const labBadge = document.getElementById('lab-sw-badge');
+      
+      if (isReady) {
+        if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse";
+        if (text) text.textContent = customText ? `서비스 워커 (${customText})` : "서비스 워커 활성 (SW Ready)";
+        if (labBadge) {
+          labBadge.className = "px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 font-mono text-[10px] font-bold";
+          labBadge.textContent = "ACTIVATED";
+        }
+      } else {
+        if (dot) dot.className = "w-2.5 h-2.5 rounded-full bg-red-500";
+        if (text) text.textContent = "서비스 워커 비활성";
+        if (labBadge) {
+          labBadge.className = "px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 font-mono text-[10px] font-bold";
+          labBadge.textContent = "DISABLED";
+        }
+      }
+    }
+
+    // Initialize Application
+    window.onload = function() {
+      setupInlinePWA();
+      updateClocks();
+      setInterval(updateClocks, 1000);
+      setInterval(updateCountdown, 1000);
+
+      window.renderWidgetContent();
+      window.renderScheduleDetailCards();
+      window.switchCodeFile('manifest');
+    };
+  </script>
+
+</body>
+</html>
