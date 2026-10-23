@@ -1,35 +1,24 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>안양 스포츠 위젯</title>
-    
-    <!-- 1. 매니페스트 연결 -->
-    <link rel="manifest" href="/manifest.json">
-    
-    <!-- 모바일 상태바 테마 색상 설정 -->
-    <meta name="theme-color" content="#6200EE">
-    
-    <link rel="stylesheet" href="/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>안양 스포츠 위젯</title>
+  <link rel="manifest" href="/manifest.json">
+  <meta name="theme-color" content="#5E2A84">
+  <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-    <h1>안양 연고 스포츠 경기 일정</h1>
-    <!-- 위젯 콘텐츠 내용 -->
+  <!-- Widget App Container -->
+  <div id="app"></div>
 
-    <!-- 2. 서비스 워커 등록 스크립트 -->
-    <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then((registration) => {
-              console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            })
-            .catch((error) => {
-              console.log('ServiceWorker registration failed: ', error);
-            });
-        });
-      }
-    </script>
+  <script src="/app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js');
+      });
+    }
+  </script>
 </body>
 </html>
